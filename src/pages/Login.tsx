@@ -44,7 +44,7 @@ const Login = () => {
 
   return (
     <div className="attendance-layout" style={{ minHeight: 'calc(100vh - 160px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="glass-panel" style={{ background: 'white', maxWidth: '400px', width: '100%', padding: '2.5rem' }}>
+      <div className="login-panel">
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div className="card-icon-wrapper" style={{ margin: '0 auto 1rem', background: 'linear-gradient(135deg, #fce4e4 0%, #f3ecec 100%)' }}>
             <Lock size={32} color="var(--primary-color)" />
