@@ -3,6 +3,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import aicteLogo from '../assets/aicte1.png';
+import aicetLogo from '../assets/AICET.png';
 
 const BRANCHES = [
   'Civil Engineering',
@@ -86,9 +88,13 @@ const WorkshopAttendance = () => {
 
   return (
     <div>
-      <h1 className="page-title" style={{ fontSize: '2rem' }}>
-        Ravindra Sakharpe AICTE IDEA Lab, Warananagar.
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center', marginBottom: '0.5rem' }}>
+        <img src={aicteLogo} alt="Lab Logo" style={{ width: '95px', height: '90px', objectFit: 'contain' }} />
+        <h1 className="page-title" style={{ fontSize: '2rem', margin: 0, background: 'none', color: '#000', WebkitTextFillColor: 'initial', textAlign: 'center' }}>
+          Ravindra Sakharpe IDEA Lab
+        </h1>
+        <img src={aicetLogo} alt="AICET Logo" style={{ width: '95px', height: '90px', objectFit: 'contain' }} />
+      </div>
       <p className="page-subtitle">Register your attendance for today's workshop.</p>
 
       <div className="attendance-layout">
