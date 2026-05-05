@@ -17,7 +17,7 @@ const TopHeader = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
         <Link to="/" className="header-logo-block">
           <div className="header-logo-icon" style={{ background: 'transparent', boxShadow: 'none' }}>
-            <img src={aicteLogo} alt="Lab Logo" style={{ width: '80px', height: '60px', objectFit: 'contain' }} />
+            <img src={aicteLogo} alt="Lab Logo" style={{ width: '95px', height: '90px', objectFit: 'contain' }} />
           </div>
           AICTE Idea Lab
         </Link>
