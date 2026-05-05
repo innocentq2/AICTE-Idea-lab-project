@@ -211,8 +211,9 @@ a {
 }
 
 .dashboard-card-wrapper:hover .card-icon-wrapper {
-  transform: scale(1.1) rotate(5deg);
+  transform: translateY(-8px) scale(1.1);
   background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
 }
 
 .dashboard-card-title {
@@ -331,35 +332,38 @@ a {
 }
 
 .form-group {
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-label {
   display: block;
-  margin-bottom: 0.75rem;
-  color: var(--text-main);
+  font-size: 0.9rem;
   font-weight: 600;
-  font-size: 0.95rem;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
 }
 
 .form-input {
   width: 100%;
-  background: #F8FAFC;
-  border: 2px solid #E2E8F0;
+  padding: 0.85rem 1.25rem;
   border-radius: 12px;
-  padding: 1rem 1.25rem;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  transition: all 0.3s ease;
+  font-family: inherit;
   color: var(--text-main);
   font-size: 1rem;
-  font-family: inherit;
-  font-weight: 500;
-  transition: all 0.3s ease;
 }
 
 .form-input:focus {
   outline: none;
-  background: white;
   border-color: #DC2626;
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
+}
+
+.form-input::placeholder {
+  color: #94A3B8;
 }
 
 .btn-primary {
@@ -547,7 +551,7 @@ a {
 /* Admin Table */
 .table-container {
   overflow-x: auto;
-  border-radius: 0.5rem;
+  border-radius: 16px;
   border: 1px solid #E2E8F0;
   box-shadow: var(--shadow-sm);
   background: white;
@@ -562,17 +566,23 @@ a {
 
 .admin-table th,
 .admin-table td {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #E2E8F0;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #F1F5F9;
+  transition: background 0.2s ease;
+}
+
+.admin-table tbody tr:hover td {
+  background: #F8FAFC;
 }
 
 .admin-table th {
   background: #F8FAFC;
   font-weight: 700;
-  color: var(--text-main);
-  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  border-bottom: 2px solid #E2E8F0;
 }
 
 .admin-table tbody tr:hover {

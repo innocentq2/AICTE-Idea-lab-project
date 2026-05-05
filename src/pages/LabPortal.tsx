@@ -1,4 +1,5 @@
-import { Printer } from 'lucide-react';
+import { Printer, MapPin, Activity } from 'lucide-react';
+import printerBg from '../assets/printer_bg.png';
 
 const PRINTERS = Array.from({ length: 16 }, (_, i) => ({
   id: i + 1,
@@ -16,66 +17,65 @@ const LabPortal = () => {
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-        gap: '1.5rem',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: '2.5rem',
         marginTop: '2rem'
       }}>
         {PRINTERS.map((printer) => (
-          <div key={printer.id} style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            transition: 'transform 0.3s ease, border-color 0.3s ease'
-          }}
-          className="printer-card"
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ 
-                background: 'var(--gradient-maroon)', 
-                padding: '0.75rem', 
-                borderRadius: '12px',
-                color: 'white'
-              }}>
-                <Printer size={24} />
-              </div>
+          <div key={printer.id} className="ambassador-card" style={{ padding: 0 }}>
+            {/* Top Image Banner */}
+            <div style={{ 
+              height: '100px', 
+              backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url(${printerBg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              padding: '1rem'
+            }}>
               <span style={{
                 fontSize: '0.75rem',
-                fontWeight: 600,
-                padding: '0.25rem 0.75rem',
+                fontWeight: 700,
+                padding: '0.35rem 0.85rem',
                 borderRadius: '999px',
-                background: printer.status === 'Available' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                color: printer.status === 'Available' ? '#4ade80' : '#f87171',
-                border: `1px solid ${printer.status === 'Available' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                background: printer.status === 'Available' ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.9)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                alignSelf: 'flex-start'
               }}>
                 {printer.status}
               </span>
             </div>
             
-            <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+            <div style={{ padding: '0 1.5rem 1.5rem', position: 'relative', marginTop: '-30px', display: 'flex', flexDirection: 'column' }}>
+              {/* Floating Icon */}
+              <div style={{ 
+                width: '60px', height: '60px', borderRadius: '16px', background: 'var(--gradient-maroon)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white',
+                boxShadow: '0 4px 10px rgba(153, 27, 27, 0.3)', border: '3px solid white', marginBottom: '1rem'
+              }}>
+                <Printer size={28} strokeWidth={1.5} />
+              </div>
+
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
                 {printer.name}
               </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{printer.type}</p>
-            </div>
-
-            <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
-              📍 {printer.location}
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)', background: '#F8FAFC', padding: '0.6rem 1rem', borderRadius: '8px' }}>
+                  <Activity size={16} color="#DC2626" />
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{printer.type}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)', background: '#F8FAFC', padding: '0.6rem 1rem', borderRadius: '8px' }}>
+                  <MapPin size={16} />
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{printer.location}</span>
+                </div>
+              </div>
             </div>
           </div>
         ))}
       </div>
-      
-      <style>{`
-        .printer-card:hover {
-          transform: translateY(-4px);
-          border-color: rgba(220, 38, 38, 0.5) !important;
-        }
-      `}</style>
     </div>
   );
 };

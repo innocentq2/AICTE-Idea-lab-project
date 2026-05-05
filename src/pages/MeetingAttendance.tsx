@@ -93,8 +93,15 @@ const MeetingAttendance = () => {
 
       <div className="attendance-layout">
         {/* Left Side: QR Code Display */}
-        <div className="glass-panel qr-section" style={{ height: 'fit-content' }}>
-          <div className="qr-code-wrapper">
+        <div className="glass-panel qr-section" style={{ height: 'fit-content', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+          <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)', fontWeight: 800, marginBottom: '1.5rem' }}>
+            Scan to Attend
+          </h3>
+          <div className="qr-code-wrapper" style={{ 
+            background: 'white', padding: '1rem', borderRadius: '20px', 
+            boxShadow: '0 12px 30px rgba(0,0,0,0.1)', border: '1px solid #E2E8F0',
+            display: 'inline-block'
+          }}>
             <QRCodeSVG 
               value={attendanceLink} 
               size={200}
@@ -102,11 +109,8 @@ const MeetingAttendance = () => {
               bgColor="#ffffff"
             />
           </div>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
-            Scan to Attend
-          </h3>
-          <p className="qr-instruction">
-            Point your phone camera at the QR code to quickly access this attendance form.
+          <p className="qr-instruction" style={{ marginTop: '1.5rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+            Point your phone camera at the QR code to quickly access this attendance form from your mobile device.
           </p>
         </div>
 
