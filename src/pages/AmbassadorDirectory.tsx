@@ -1,4 +1,4 @@
-import { Phone, BookOpen, Star, User } from 'lucide-react';
+import { Phone, BookOpen, Star } from 'lucide-react';
 
 const COORDINATOR = {
   name: 'B.R. Bagane',
