@@ -384,7 +384,7 @@ const AdminDashboard = () => {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
+                      <th>Sr. No.</th>
                       <th>Name</th>
                       <th>Class</th>
                       <th>Roll No</th>
@@ -395,9 +395,9 @@ const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {displayRecords.map(record => (
+                    {displayRecords.map((record, index) => (
                       <tr key={record.id}>
-                        <td style={{ color: 'var(--text-muted)' }}>{record.timestamp?.toDate ? record.timestamp.toDate().toLocaleDateString() : 'N/A'}</td>
+                        <td style={{ color: 'var(--text-muted)' }}>{index + 1}</td>
                         <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{record.name}</td>
                         <td>{record.studentClass}</td>
                         <td>{record.rollNo}</td>
