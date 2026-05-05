@@ -166,17 +166,16 @@ const AdminDashboard = () => {
     doc.setFontSize(11);
     doc.setTextColor(100);
     if (selectedDate) {
-      doc.text(`Filtered Date: ${selectedDate}`, 14, 23);
+      doc.text(`Date: ${selectedDate}`, 14, 23);
     } else {
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 23);
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 23);
     }
 
     autoTable(doc, {
       startY: 30,
-      head: [['Sr. No.', 'Date', 'Name', 'Email', 'Branch', 'Roll No', 'Work On', 'Reason', 'In', 'Out']],
+      head: [['Sr. No.', 'Name', 'Email', 'Branch', 'Roll No', 'Work On', 'Reason', 'In', 'Out']],
       body: displayRecords.map((r, index) => [
         index + 1,
-        r.timestamp?.toDate ? r.timestamp.toDate().toLocaleDateString() : 'N/A',
         r.name || '',
         r.email || '',
         r.branch || '',
