@@ -19,6 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const ADMIN_EMAILS = [
   'atharva15181389@gmail.com',
   'brbagane@tkietwarana.ac.in',
+  'itsmey661@gmail.com',
   '[EMAIL_ADDRESS]'
 ];
 

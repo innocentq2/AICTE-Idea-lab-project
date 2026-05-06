@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Users, Info, QrCode, ClipboardList } from 'lucide-react';
+import { Users, Info, QrCode, ClipboardList, MessageSquare, FileQuestion } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import bgAmbassadors from '../assets/ambassadors_bg.png';
 import bgLabPortal from '../assets/lab_portal_bg.png';
@@ -50,6 +50,34 @@ const Dashboard = () => {
           </div>
           <h2 className="dashboard-card-title">Attendance</h2>
           <p className="dashboard-card-subtitle">Scan or enter your ID</p>
+        </div>
+      </Link>
+
+      <Link to="/feedback" className="dashboard-card-wrapper">
+        <div className="dashboard-card" style={{
+          backgroundImage: 'linear-gradient(to bottom, rgba(5, 150, 105, 0.85), rgba(4, 120, 87, 0.95))',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}>
+          <div className="card-icon-wrapper">
+            <MessageSquare size={52} strokeWidth={1.5} />
+          </div>
+          <h2 className="dashboard-card-title">Feedback</h2>
+          <p className="dashboard-card-subtitle">Share your lab experience</p>
+        </div>
+      </Link>
+
+      <Link to="/questionnaire" className="dashboard-card-wrapper">
+        <div className="dashboard-card" style={{
+          backgroundImage: 'linear-gradient(to bottom, rgba(217, 119, 6, 0.85), rgba(180, 83, 9, 0.95))',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}>
+          <div className="card-icon-wrapper">
+            <FileQuestion size={52} strokeWidth={1.5} />
+          </div>
+          <h2 className="dashboard-card-title">Questionnaire</h2>
+          <p className="dashboard-card-subtitle">Answer lab activity questions</p>
         </div>
       </Link>
 

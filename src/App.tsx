@@ -10,6 +10,8 @@ import MeetingAttendance from './pages/MeetingAttendance';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import LabPortal from './pages/LabPortal';
+import FeedbackForm from './pages/FeedbackForm';
+import Questionnaire from './pages/Questionnaire';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
             <Route path="/workshop-attendance" element={<div className="page-container"><WorkshopAttendance /></div>} />
             <Route path="/meeting-attendance" element={<div className="page-container"><MeetingAttendance /></div>} />
             <Route path="/lab-portal" element={<div className="page-container"><LabPortal /></div>} />
+            <Route path="/feedback" element={<div className="page-container"><FeedbackForm /></div>} />
+            <Route path="/questionnaire" element={<div className="page-container"><Questionnaire /></div>} />
           </Routes>
         </main>
       </div>

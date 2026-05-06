@@ -170,14 +170,15 @@ const AdminDashboard = () => {
     } else {
       doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 23);
     }
+    doc.text(`Total Students: ${displayRecords.length}`, 14, 30);
 
     autoTable(doc, {
-      startY: 30,
-      head: [['Sr. No.', 'Name', 'Email', 'Branch', 'Roll No', 'Work On', 'Reason', 'In', 'Out']],
+      startY: 37,
+      head: [['Sr. No.', 'Name', 'Mobile No', 'Branch', 'Roll No', 'Work On', 'Reason', 'In', 'Out']],
       body: displayRecords.map((r, index) => [
         index + 1,
         r.name || '',
-        r.email || '',
+        r.mobileNo || '-',
         r.branch || '',
         r.rollNo || '',
         r.wantToWorkOn || '',
