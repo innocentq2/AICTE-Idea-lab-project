@@ -37,6 +37,7 @@ const AdminDashboard = () => {
   const [fetching, setFetching] = useState(true);
   const [formsData, setFormsData] = useState<FormRecord[]>([]);
   const [formsFetching, setFormsFetching] = useState(false);
+  const [selectedFormsDate, setSelectedFormsDate] = useState<string>('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
 
@@ -113,25 +114,24 @@ const AdminDashboard = () => {
     );
   }
 
-  // Merge, Sort and Filter Data
-  let displayRecords = Object.values(collectionsData).flat();
-  
-  displayRecords.sort((a, b) => {
-    const timeA = a.timestamp?.seconds || 0;
-    const timeB = b.timestamp?.seconds || 0;
-    return timeB - timeA;
-  });
+  // Helper: convert Firestore timestamp to YYYY-MM-DD
+  const toDateStr = (ts: any): string => {
+    if (!ts?.toDate) return '';
+    const d = ts.toDate();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  };
 
+  // Merge, Sort and Filter Attendance Data
+  let displayRecords = Object.values(collectionsData).flat();
+  displayRecords.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
   if (selectedDate) {
-    displayRecords = displayRecords.filter(r => {
-      if (!r.timestamp?.toDate) return false;
-      const localDate = r.timestamp.toDate();
-      const year = localDate.getFullYear();
-      const month = String(localDate.getMonth() + 1).padStart(2, '0');
-      const day = String(localDate.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-      return dateStr === selectedDate;
-    });
+    displayRecords = displayRecords.filter(r => toDateStr(r.timestamp) === selectedDate);
+  }
+
+  // Filter Forms Data by date
+  let displayForms = formsData;
+  if (selectedFormsDate) {
+    displayForms = formsData.filter(r => toDateStr(r.timestamp) === selectedFormsDate);
   }
 
   const exportPDF = () => {
@@ -309,24 +309,45 @@ const AdminDashboard = () => {
                   {activeTab === 'feedback' ? 'Feedback Responses' : 'Questionnaire Responses'}
                 </h2>
                 <p className="page-subtitle" style={{ marginBottom: 0 }}>
-                  {formsData.length} response{formsData.length !== 1 ? 's' : ''} collected
+                  {selectedFormsDate
+                    ? <><strong style={{color:'#7F1D1D'}}>{displayForms.length}</strong> of {formsData.length} response{formsData.length !== 1 ? 's' : ''} on <strong style={{color:'#7F1D1D'}}>{selectedFormsDate}</strong></>
+                    : <>{formsData.length} total response{formsData.length !== 1 ? 's' : ''}</>}
                 </p>
               </div>
-              <button
-                onClick={exportFormsPDF}
-                className="btn-primary"
-                disabled={formsData.length === 0}
-                style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem' }}
-              >
-                <Download size={18} />
-                Export PDF
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <input
+                  type="date"
+                  value={selectedFormsDate}
+                  onChange={e => setSelectedFormsDate(e.target.value)}
+                  className="form-input"
+                  style={{ padding: '0.6rem 1rem', width: 'auto' }}
+                />
+                {selectedFormsDate && (
+                  <button
+                    onClick={() => setSelectedFormsDate('')}
+                    style={{ padding: '0.5rem 0.75rem', background: 'transparent', border: '1px solid #DC2626', borderRadius: '8px', color: '#DC2626', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+                  >
+                    Clear
+                  </button>
+                )}
+                <button
+                  onClick={exportFormsPDF}
+                  className="btn-primary"
+                  disabled={displayForms.length === 0}
+                  style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem' }}
+                >
+                  <Download size={18} />
+                  Export PDF
+                </button>
+              </div>
             </div>
             <div className="table-container">
               {formsFetching ? (
                 <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>Fetching responses...</div>
-              ) : formsData.length === 0 ? (
-                <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>No responses yet.</div>
+              ) : displayForms.length === 0 ? (
+                <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  {selectedFormsDate ? `No responses found for ${selectedFormsDate}.` : 'No responses yet.'}
+                </div>
               ) : activeTab === 'feedback' ? (
                 <table className="admin-table">
                   <thead><tr>
@@ -335,7 +356,7 @@ const AdminDashboard = () => {
                     <th>Visit Date</th><th>Useful?</th><th>Overall ⭐</th>
                   </tr></thead>
                   <tbody>
-                    {formsData.map((r, i) => (
+                    {displayForms.map((r, i) => (
                       <tr key={r.id}>
                         <td>{i + 1}</td>
                         <td style={{ fontWeight: 600 }}>{r.name || '-'}</td>
@@ -360,7 +381,7 @@ const AdminDashboard = () => {
                     <th>Understood?</th><th>Safety?</th><th>Learn More?</th>
                   </tr></thead>
                   <tbody>
-                    {formsData.map((r, i) => (
+                    {displayForms.map((r, i) => (
                       <tr key={r.id}>
                         <td>{i + 1}</td>
                         <td style={{ fontWeight: 600 }}>{r.studentName || '-'}</td>
