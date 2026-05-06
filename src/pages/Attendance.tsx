@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle } from 'lucide-react';
 import { db } from '../firebase';
@@ -37,8 +38,18 @@ const CLASSES = [
 ];
 
 const Attendance = () => {
+  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(4);
+
+  useEffect(() => {
+    if (!submitted) return;
+    setCountdown(4);
+    const tick = setInterval(() => setCountdown(c => c - 1), 1000);
+    const redirect = setTimeout(() => navigate('/'), 4000);
+    return () => { clearInterval(tick); clearTimeout(redirect); };
+  }, [submitted, navigate]);
   const [formData, setFormData] = useState({ 
     email: '', 
     name: '',
@@ -76,7 +87,6 @@ const Attendance = () => {
           rollNo: '', mobileNo: '', wantToWorkOn: '', 
           reasonOfWorking: '', timingIn: '', timingOut: '' 
         });
-        setTimeout(() => setSubmitted(false), 3000);
       } catch (error) {
         console.error('Error saving attendance:', error);
         alert('Failed to save attendance. Please try again.');
@@ -85,6 +95,41 @@ const Attendance = () => {
       }
     }
   };
+
+  if (submitted) {
+    return (
+      <div style={{
+        minHeight: '70vh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: '1.5rem', textAlign: 'center', padding: '2rem'
+      }}>
+        <div style={{
+          width: '100px', height: '100px', borderRadius: '50%',
+          background: 'linear-gradient(135deg, #DC2626, #7F1D1D)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 12px 40px rgba(220,38,38,0.35)', animation: 'pulse 1.5s infinite'
+        }}>
+          <CheckCircle size={56} color="white" />
+        </div>
+        <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--text-main)', margin: 0 }}>
+          🎉 Attendance Recorded!
+        </h2>
+        <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', maxWidth: '420px', margin: 0, lineHeight: 1.7 }}>
+          Thank you for checking in to the <strong>IDEA Lab</strong>.<br />
+          Have a productive session!
+        </p>
+        <p style={{ fontSize: '0.95rem', color: '#94A3B8', margin: 0 }}>
+          Redirecting to home in <strong style={{ color: '#DC2626' }}>{countdown}</strong> seconds...
+        </p>
+        <button
+          className="btn-primary"
+          style={{ width: 'auto', padding: '0.75rem 2rem' }}
+          onClick={() => navigate('/')}
+        >
+          Go to Home Now
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>

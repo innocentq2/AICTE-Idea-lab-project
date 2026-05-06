@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Star, MessageSquare, ThumbsUp, Building2 } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -71,8 +72,18 @@ const StarRating: React.FC<StarRatingProps> = ({ label, field, value, onChange }
 };
 
 const FeedbackForm = () => {
+  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(4);
+
+  useEffect(() => {
+    if (!submitted) return;
+    setCountdown(4);
+    const tick = setInterval(() => setCountdown(c => c - 1), 1000);
+    const redirect = setTimeout(() => navigate('/'), 4000);
+    return () => { clearInterval(tick); clearTimeout(redirect); };
+  }, [submitted, navigate]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -165,21 +176,34 @@ const FeedbackForm = () => {
 
   if (submitted) {
     return (
-      <div className="feedback-success">
-        <div className="feedback-success-icon">
-          <CheckCircle size={64} />
+      <div style={{
+        minHeight: '70vh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: '1.5rem', textAlign: 'center', padding: '2rem'
+      }}>
+        <div style={{
+          width: '100px', height: '100px', borderRadius: '50%',
+          background: 'linear-gradient(135deg, #DC2626, #7F1D1D)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 12px 40px rgba(220,38,38,0.35)', animation: 'pulse 1.5s infinite'
+        }}>
+          <CheckCircle size={56} color="white" />
         </div>
-        <h2 className="feedback-success-title">Thank You!</h2>
-        <p className="feedback-success-msg">
-          Your feedback has been successfully submitted. We truly appreciate your time and will use
-          your input to improve the IDEA Lab experience.
+        <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--text-main)', margin: 0 }}>
+          🎉 Thank You!
+        </h2>
+        <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', maxWidth: '420px', margin: 0, lineHeight: 1.7 }}>
+          Your feedback has been <strong>successfully submitted</strong>.<br />
+          We truly appreciate your time and insights!
+        </p>
+        <p style={{ fontSize: '0.95rem', color: '#94A3B8', margin: 0 }}>
+          Redirecting to home in <strong style={{ color: '#DC2626' }}>{countdown}</strong> seconds...
         </p>
         <button
           className="btn-primary"
-          style={{ maxWidth: 240, margin: '2rem auto 0' }}
-          onClick={() => setSubmitted(false)}
+          style={{ width: 'auto', padding: '0.75rem 2rem' }}
+          onClick={() => navigate('/')}
         >
-          Submit Another
+          Go to Home Now
         </button>
       </div>
     );
