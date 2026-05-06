@@ -49,7 +49,7 @@ const Questionnaire = () => {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const initialStudent = { name: '', branch: '', year: '', collegeName: '', rollNumber: '', contactNumber: '' };
+  const initialStudent = { name: '', branch: '', year: '', collegeName: '', rollNumber: '', contactNumber: '', industryName: '' };
   const initialAnswers = {
     q1: '', q2: '', q3: '', q4: '',
     q5: '', q6: '', q7: '',
@@ -76,6 +76,7 @@ const Questionnaire = () => {
         collegeName: student.collegeName,
         rollNumber: student.rollNumber,
         contactNumber: student.contactNumber,
+        industryName: student.industryName,
         whatDidYouSee: answers.q1,
         machinesShown: answers.q2,
         materialsUsed: answers.q3,
@@ -214,6 +215,11 @@ const Questionnaire = () => {
               <label htmlFor="contactNumber" className="form-label">Contact Number *</label>
               <input type="tel" id="contactNumber" className="form-input" placeholder="10-digit mobile number"
                 value={student.contactNumber} onChange={handleStudent} required maxLength={10} />
+            </div>
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label htmlFor="industryName" className="form-label">Name of Industry Visited *</label>
+              <input type="text" id="industryName" className="form-input" placeholder="e.g. Tata Motors, Infosys..."
+                value={student.industryName} onChange={handleStudent} required />
             </div>
           </div>
         </div>
