@@ -79,6 +79,7 @@ const FeedbackForm = () => {
     branch: '',
     year: '',
     collegeName: '',
+    rollNumber: '',
     contactNumber: '',
     industryName: '',
     visitDate: '',
@@ -135,6 +136,7 @@ const FeedbackForm = () => {
         branch: '',
         year: '',
         collegeName: '',
+        rollNumber: '',
         contactNumber: '',
         industryName: '',
         visitDate: '',
@@ -296,7 +298,19 @@ const FeedbackForm = () => {
                 required
               />
             </div>
-            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <div className="form-group">
+              <label htmlFor="rollNumber" className="form-label">Roll Number *</label>
+              <input
+                type="text"
+                id="rollNumber"
+                className="form-input"
+                placeholder="Roll Number"
+                value={formData.rollNumber}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
               <label htmlFor="contactNumber" className="form-label">Contact Number *</label>
               <input
                 type="tel"

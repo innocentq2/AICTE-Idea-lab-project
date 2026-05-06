@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { collection, onSnapshot, query, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Download, User, Database, Calendar, Briefcase, Users as UsersIcon, Save, CheckCircle, Menu, X } from 'lucide-react';
+import { Download, Database, Calendar, Briefcase, Users as UsersIcon, Menu, X, MessageSquare, FileQuestion } from 'lucide-react';
 
 interface AttendanceRecord {
   id: string;
@@ -22,47 +22,29 @@ interface AttendanceRecord {
   timestamp: any;
 }
 
-interface AdminProfile {
-  name: string;
-  role: string;
-  phone: string;
-  bio: string;
-}
+type TabType = 'all' | 'regular' | 'meeting' | 'workshop' | 'feedback' | 'questionnaire';
 
-type TabType = 'profile' | 'all' | 'regular' | 'meeting' | 'workshop';
+interface FormRecord {
+  id: string;
+  [key: string]: any;
+}
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('profile');
+  const [activeTab, setActiveTab] = useState<TabType>('all');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [collectionsData, setCollectionsData] = useState<Record<string, AttendanceRecord[]>>({});
   const [fetching, setFetching] = useState(true);
-  
-  // Sidebar state for mobile
+  const [formsData, setFormsData] = useState<FormRecord[]>([]);
+  const [formsFetching, setFormsFetching] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // Profile states
-  const [profile, setProfile] = useState<AdminProfile>({ name: '', role: '', phone: '', bio: '' });
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [profileSaved, setProfileSaved] = useState(false);
-
-  useEffect(() => {
-    if (user && isAdmin) {
-      // Fetch Admin Profile
-      getDoc(doc(db, 'admin_profiles', user.email!)).then(snap => {
-        if (snap.exists()) {
-          setProfile(snap.data() as AdminProfile);
-        }
-      });
-    }
-  }, [user, isAdmin]);
+  const [attendanceOpen, setAttendanceOpen] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) return;
+    if (activeTab === 'feedback' || activeTab === 'questionnaire') return;
 
-    if (activeTab === 'profile') return;
-
-    let collectionsToFetch = [];
+    let collectionsToFetch: string[] = [];
     if (activeTab === 'all') {
       collectionsToFetch = ['regular_attendance', 'meeting_attendance', 'workshop_attendance'];
     } else {
@@ -82,41 +64,35 @@ const AdminDashboard = () => {
         querySnapshot.forEach((doc) => {
           data.push({ id: doc.id, ...doc.data() } as AttendanceRecord);
         });
-        setCollectionsData(prev => ({
-          ...prev,
-          [colName]: data
-        }));
+        setCollectionsData(prev => ({ ...prev, [colName]: data }));
         setFetching(false);
       }, (error) => {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
         setFetching(false);
       });
     });
 
-    return () => unsubscribers.forEach(unsubscribe => unsubscribe());
+    return () => unsubscribers.forEach(u => u());
   }, [activeTab, isAdmin]);
 
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    setSavingProfile(true);
-    try {
-      await setDoc(doc(db, 'admin_profiles', user.email!), profile, { merge: true });
-      setProfileSaved(true);
-      setTimeout(() => setProfileSaved(false), 3000);
-    } catch (error) {
-      console.error("Error saving profile:", error);
-      alert('Failed to save profile. Please try again.');
-    } finally {
-      setSavingProfile(false);
-    }
-  };
-
-  const getInitials = (name: string, email: string) => {
-    if (name) return name.substring(0, 2).toUpperCase();
-    if (email) return email.substring(0, 2).toUpperCase();
-    return 'AD';
-  };
+  useEffect(() => {
+    if (!isAdmin) return;
+    if (activeTab !== 'feedback' && activeTab !== 'questionnaire') return;
+    const colName = activeTab === 'feedback' ? 'feedback' : 'questionnaire_responses';
+    setFormsFetching(true);
+    setFormsData([]);
+    const q = query(collection(db, colName), orderBy('timestamp', 'desc'));
+    const unsub = onSnapshot(q, snap => {
+      const data: FormRecord[] = [];
+      snap.forEach(d => data.push({ id: d.id, ...d.data() }));
+      setFormsData(data);
+      setFormsFetching(false);
+    }, err => {
+      console.error('Error fetching forms:', err);
+      setFormsFetching(false);
+    });
+    return () => unsub();
+  }, [activeTab, isAdmin]);
 
   if (loading) {
     return <div style={{ padding: '4rem', textAlign: 'center' }}>Loading Admin Portal...</div>;
@@ -195,6 +171,65 @@ const AdminDashboard = () => {
     doc.save(filename);
   };
 
+  const exportFormsPDF = () => {
+    const pdfDoc = new jsPDF('landscape');
+    const isFeedback = activeTab === 'feedback';
+    const title = isFeedback ? 'AICTE Idea Lab — Feedback Responses' : 'AICTE Idea Lab — Questionnaire Responses';
+
+    pdfDoc.setFontSize(16);
+    pdfDoc.text(title, 14, 15);
+    pdfDoc.setFontSize(11);
+    pdfDoc.setTextColor(100);
+    pdfDoc.text(`Exported: ${new Date().toLocaleDateString()}`, 14, 23);
+    pdfDoc.text(`Total Responses: ${formsData.length}`, 14, 30);
+
+    if (isFeedback) {
+      autoTable(pdfDoc, {
+        startY: 37,
+        head: [['Sr.', 'Name', 'Roll No', 'Branch', 'Year', 'College', 'Contact', 'Industry', 'Visit Date', 'Useful?', 'Overall']],
+        body: formsData.map((r, i) => [
+          i + 1,
+          r.name || '-',
+          r.rollNumber || '-',
+          r.branch || '-',
+          r.year || '-',
+          r.collegeName || '-',
+          r.contactNumber || '-',
+          r.industryName || '-',
+          r.visitDate || '-',
+          r.visitUseful || '-',
+          r.overallExperience ? `${r.overallExperience}/5` : '-'
+        ]),
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [127, 29, 29], textColor: 255 },
+        alternateRowStyles: { fillColor: [248, 250, 252] }
+      });
+    } else {
+      autoTable(pdfDoc, {
+        startY: 37,
+        head: [['Sr.', 'Name', 'Roll No', 'Branch', 'Year', 'College', 'Contact', 'Industry', 'Understood?', 'Safety?', 'Learn More?']],
+        body: formsData.map((r, i) => [
+          i + 1,
+          r.studentName || '-',
+          r.rollNumber || '-',
+          r.branch || '-',
+          r.year || '-',
+          r.collegeName || '-',
+          r.contactNumber || '-',
+          r.industryName || '-',
+          r.understoodWorking || '-',
+          r.safetyExplained || '-',
+          r.wouldLearnMore || '-'
+        ]),
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [127, 29, 29], textColor: 255 },
+        alternateRowStyles: { fillColor: [248, 250, 252] }
+      });
+    }
+
+    pdfDoc.save(`${activeTab}_responses_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   const NavItem = ({ id, label, icon: Icon }: { id: TabType, label: string, icon: any }) => (
     <button 
       className={`admin-nav-item ${activeTab === id ? 'active' : ''}`}
@@ -227,108 +262,122 @@ const AdminDashboard = () => {
         width: '280px', flexShrink: 0, padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '2rem',
         height: 'calc(100vh - 120px)', position: 'sticky', top: '100px', overflowY: 'auto'
       }}>
-        <div style={{ textAlign: 'center', paddingBottom: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
-          <div style={{ 
-            width: '80px', height: '80px', borderRadius: '50%', background: 'var(--gradient-maroon)', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.5rem', fontWeight: 700,
-            boxShadow: '0 4px 10px rgba(0,0,0,0.1)', border: '4px solid white', margin: '0 auto 1rem'
-          }}>
-            {getInitials(profile.name, user.email!)}
-          </div>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
-            {profile.name || 'Admin User'}
-          </h3>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{user.email}</p>
-        </div>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', paddingLeft: '1rem' }}>
-            Account
+          {/* ── Attendance (accordion) ── */}
+          <button
+            onClick={() => setAttendanceOpen(o => !o)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0.75rem 1rem', borderRadius: '12px', border: 'none', cursor: 'pointer',
+              background: attendanceOpen ? 'rgba(127,29,29,0.08)' : 'transparent',
+              color: attendanceOpen ? '#7F1D1D' : 'var(--text-main)',
+              fontWeight: 700, fontSize: '0.95rem', width: '100%', transition: 'all 0.2s'
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Database size={20} /> Attendance
+            </span>
+            <span style={{ fontSize: '0.7rem', transform: attendanceOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', display: 'inline-block' }}>▼</span>
+          </button>
+
+          {attendanceOpen && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingLeft: '0.75rem', borderLeft: '2px solid #F1F5F9', marginLeft: '1rem' }}>
+              <NavItem id="all" label="All Records" icon={Database} />
+              <NavItem id="regular" label="Regular Entry" icon={Calendar} />
+              <NavItem id="workshop" label="Workshops" icon={Briefcase} />
+              <NavItem id="meeting" label="Meetings" icon={UsersIcon} />
+            </div>
+          )}
+
+          {/* ── Forms ── */}
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '1rem 0 0.35rem', paddingLeft: '1rem' }}>
+            Forms
           </div>
-          <NavItem id="profile" label="Profile Settings" icon={User} />
-          
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '1.5rem 0 0.5rem', paddingLeft: '1rem' }}>
-            Attendance Data
-          </div>
-          <NavItem id="all" label="All Records" icon={Database} />
-          <NavItem id="regular" label="Regular Entry" icon={Calendar} />
-          <NavItem id="workshop" label="Workshops" icon={Briefcase} />
-          <NavItem id="meeting" label="Meetings" icon={UsersIcon} />
+          <NavItem id="feedback" label="Feedback" icon={MessageSquare} />
+          <NavItem id="questionnaire" label="Questionnaire" icon={FileQuestion} />
         </nav>
       </div>
 
       {/* Main Content Area */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {activeTab === 'profile' ? (
+        {(activeTab === 'feedback' || activeTab === 'questionnaire') ? (
           <div className="glass-panel" style={{ background: 'white' }}>
-            <div style={{ marginBottom: '2rem' }}>
-              <h2 className="page-title" style={{ fontSize: '2rem' }}>Admin Profile</h2>
-              <p className="page-subtitle">Update your personal details and dashboard presence.</p>
-            </div>
-
-            {profileSaved && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#DCFCE7', color: '#166534', padding: '1rem', borderRadius: '12px', marginBottom: '2rem' }}>
-                <CheckCircle size={20} />
-                <span style={{ fontWeight: 600 }}>Profile updated successfully!</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h2 className="page-title" style={{ fontSize: '2rem' }}>
+                  {activeTab === 'feedback' ? 'Feedback Responses' : 'Questionnaire Responses'}
+                </h2>
+                <p className="page-subtitle" style={{ marginBottom: 0 }}>
+                  {formsData.length} response{formsData.length !== 1 ? 's' : ''} collected
+                </p>
               </div>
-            )}
-
-            <form onSubmit={handleSaveProfile} style={{ maxWidth: '600px' }}>
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={profile.name}
-                  onChange={e => setProfile({...profile, name: e.target.value})}
-                  placeholder="e.g. John Doe"
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Role / Title</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={profile.role}
-                    onChange={e => setProfile({...profile, role: e.target.value})}
-                    placeholder="e.g. Lab Coordinator"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Contact Number</label>
-                  <input 
-                    type="tel" 
-                    className="form-input" 
-                    value={profile.phone}
-                    onChange={e => setProfile({...profile, phone: e.target.value})}
-                    placeholder="+91..."
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Short Bio</label>
-                <textarea 
-                  className="form-input" 
-                  value={profile.bio}
-                  onChange={e => setProfile({...profile, bio: e.target.value})}
-                  placeholder="A brief description about your role..."
-                  style={{ minHeight: '120px', resize: 'vertical' }}
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                disabled={savingProfile}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}
+              <button
+                onClick={exportFormsPDF}
+                className="btn-primary"
+                disabled={formsData.length === 0}
+                style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem' }}
               >
-                <Save size={18} />
-                {savingProfile ? 'Saving...' : 'Save Profile'}
+                <Download size={18} />
+                Export PDF
               </button>
-            </form>
+            </div>
+            <div className="table-container">
+              {formsFetching ? (
+                <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>Fetching responses...</div>
+              ) : formsData.length === 0 ? (
+                <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>No responses yet.</div>
+              ) : activeTab === 'feedback' ? (
+                <table className="admin-table">
+                  <thead><tr>
+                    <th>Sr.</th><th>Name</th><th>Roll No</th><th>Branch</th><th>Year</th>
+                    <th>College</th><th>Contact</th><th>Industry</th>
+                    <th>Visit Date</th><th>Useful?</th><th>Overall ⭐</th>
+                  </tr></thead>
+                  <tbody>
+                    {formsData.map((r, i) => (
+                      <tr key={r.id}>
+                        <td>{i + 1}</td>
+                        <td style={{ fontWeight: 600 }}>{r.name || '-'}</td>
+                        <td>{r.rollNumber || '-'}</td>
+                        <td>{r.branch || '-'}</td>
+                        <td>{r.year || '-'}</td>
+                        <td>{r.collegeName || '-'}</td>
+                        <td>{r.contactNumber || '-'}</td>
+                        <td>{r.industryName || '-'}</td>
+                        <td>{r.visitDate || '-'}</td>
+                        <td>{r.visitUseful || '-'}</td>
+                        <td style={{ fontWeight: 700, color: '#DC2626' }}>{r.overallExperience ? `${r.overallExperience}/5` : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="admin-table">
+                  <thead><tr>
+                    <th>Sr.</th><th>Name</th><th>Branch</th><th>Year</th>
+                    <th>Roll No</th><th>Contact</th><th>Industry</th>
+                    <th>Understood?</th><th>Safety?</th><th>Learn More?</th>
+                  </tr></thead>
+                  <tbody>
+                    {formsData.map((r, i) => (
+                      <tr key={r.id}>
+                        <td>{i + 1}</td>
+                        <td style={{ fontWeight: 600 }}>{r.studentName || '-'}</td>
+                        <td>{r.branch || '-'}</td>
+                        <td>{r.year || '-'}</td>
+                        <td>{r.rollNumber || '-'}</td>
+                        <td>{r.contactNumber || '-'}</td>
+                        <td>{r.industryName || '-'}</td>
+                        <td>{r.understoodWorking || '-'}</td>
+                        <td>{r.safetyExplained || '-'}</td>
+                        <td>{r.wouldLearnMore || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         ) : (
           <div className="glass-panel" style={{ background: 'white' }}>
