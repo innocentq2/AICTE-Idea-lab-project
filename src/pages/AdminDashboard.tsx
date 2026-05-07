@@ -172,62 +172,210 @@ const AdminDashboard = () => {
   };
 
   const exportFormsPDF = () => {
-    const pdfDoc = new jsPDF('landscape');
     const isFeedback = activeTab === 'feedback';
     const title = isFeedback ? 'AICTE Idea Lab — Feedback Responses' : 'AICTE Idea Lab — Questionnaire Responses';
+    const MAROON: [number, number, number] = [127, 29, 29];
+    const LIGHT_GRAY: [number, number, number] = [248, 250, 252];
+    const LABEL_BG: [number, number, number] = [241, 245, 249];
+    const totalPages = displayForms.length + 1;
 
-    pdfDoc.setFontSize(16);
-    pdfDoc.text(title, 14, 15);
-    pdfDoc.setFontSize(11);
-    pdfDoc.setTextColor(100);
-    pdfDoc.text(`Exported: ${new Date().toLocaleDateString()}`, 14, 23);
-    pdfDoc.text(`Total Responses: ${formsData.length}`, 14, 30);
+    // ═══════════════════════════════════════════════════════════════════
+    // PAGE 1 — Landscape summary of all participants
+    // ═══════════════════════════════════════════════════════════════════
+    const pdfDoc = new jsPDF('landscape');
+    const pw = pdfDoc.internal.pageSize.getWidth();
+    const ph = pdfDoc.internal.pageSize.getHeight();
 
+    // Header bar
+    pdfDoc.setFillColor(...MAROON);
+    pdfDoc.rect(0, 0, pw, 28, 'F');
+    pdfDoc.setFontSize(14);
+    pdfDoc.setTextColor(255, 255, 255);
+    pdfDoc.setFont('helvetica', 'bold');
+    pdfDoc.text("SWVSM's Warana University — AICTE Idea Lab", pw / 2, 10, { align: 'center' });
+    pdfDoc.setFontSize(10);
+    pdfDoc.setFont('helvetica', 'normal');
+    pdfDoc.text(title, pw / 2, 18, { align: 'center' });
+    pdfDoc.setFontSize(8);
+    pdfDoc.text(
+      `Exported: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}   |   Total Participants: ${displayForms.length}`,
+      pw / 2, 25, { align: 'center' }
+    );
+
+    // Summary table
     if (isFeedback) {
       autoTable(pdfDoc, {
-        startY: 37,
-        head: [['Sr.', 'Name', 'Roll No', 'Branch', 'Year', 'College', 'Contact', 'Industry', 'Visit Date', 'Useful?', 'Overall']],
-        body: formsData.map((r, i) => [
-          i + 1,
-          r.name || '-',
-          r.rollNumber || '-',
-          r.branch || '-',
-          r.year || '-',
-          r.collegeName || '-',
-          r.contactNumber || '-',
-          r.industryName || '-',
-          r.visitDate || '-',
-          r.visitUseful || '-',
+        startY: 34,
+        head: [['Sr. No.', 'Name', 'Roll No', 'Branch', 'Year', 'College', 'Contact', 'Industry', 'Visit Date', 'Useful?', 'Overall ★']],
+        body: displayForms.map((r, i) => [
+          i + 1, r.name || '-', r.rollNumber || '-', r.branch || '-', r.year || '-',
+          r.collegeName || '-', r.contactNumber || '-', r.industryName || '-',
+          r.visitDate || '-', r.visitUseful || '-',
           r.overallExperience ? `${r.overallExperience}/5` : '-'
         ]),
-        styles: { fontSize: 7 },
-        headStyles: { fillColor: [127, 29, 29], textColor: 255 },
-        alternateRowStyles: { fillColor: [248, 250, 252] }
+        styles: { fontSize: 7, cellPadding: 2 },
+        headStyles: { fillColor: MAROON, textColor: 255, fontStyle: 'bold', fontSize: 7 },
+        alternateRowStyles: { fillColor: LIGHT_GRAY },
+        margin: { left: 10, right: 10 },
       });
     } else {
       autoTable(pdfDoc, {
-        startY: 37,
-        head: [['Sr.', 'Name', 'Roll No', 'Branch', 'Year', 'College', 'Contact', 'Industry', 'Understood?', 'Safety?', 'Learn More?']],
-        body: formsData.map((r, i) => [
-          i + 1,
-          r.studentName || '-',
-          r.rollNumber || '-',
-          r.branch || '-',
-          r.year || '-',
-          r.collegeName || '-',
-          r.contactNumber || '-',
-          r.industryName || '-',
-          r.understoodWorking || '-',
-          r.safetyExplained || '-',
-          r.wouldLearnMore || '-'
+        startY: 34,
+        head: [['Sr. No.', 'Name', 'Roll No', 'Branch', 'Year', 'College', 'Contact', 'Industry', 'Understood 3D?', 'Safety?', 'Learn More?']],
+        body: displayForms.map((r, i) => [
+          i + 1, r.studentName || '-', r.rollNumber || '-', r.branch || '-', r.year || '-',
+          r.collegeName || '-', r.contactNumber || '-', r.industryName || '-',
+          r.understoodWorking || '-', r.safetyExplained || '-', r.wouldLearnMore || '-'
         ]),
-        styles: { fontSize: 7 },
-        headStyles: { fillColor: [127, 29, 29], textColor: 255 },
-        alternateRowStyles: { fillColor: [248, 250, 252] }
+        styles: { fontSize: 7, cellPadding: 2 },
+        headStyles: { fillColor: MAROON, textColor: 255, fontStyle: 'bold', fontSize: 7 },
+        alternateRowStyles: { fillColor: LIGHT_GRAY },
+        margin: { left: 10, right: 10 },
       });
     }
 
-    pdfDoc.save(`${activeTab}_responses_${new Date().toISOString().split('T')[0]}.pdf`);
+    // Page 1 footer
+    pdfDoc.setFontSize(7);
+    pdfDoc.setTextColor(150);
+    pdfDoc.text(`Page 1 of ${totalPages}  |  Ravindra Sakharpe AICTE Idea Lab, Warananagar`, pw / 2, ph - 6, { align: 'center' });
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PAGE 2+ — Each participant's full details (portrait, one per page)
+    // ═══════════════════════════════════════════════════════════════════
+    displayForms.forEach((r, i) => {
+      pdfDoc.addPage('a4', 'portrait');
+      const ppw = pdfDoc.internal.pageSize.getWidth();
+      const pph = pdfDoc.internal.pageSize.getHeight();
+
+      // Participant header bar
+      pdfDoc.setFillColor(...MAROON);
+      pdfDoc.rect(0, 0, ppw, 22, 'F');
+      pdfDoc.setFontSize(13);
+      pdfDoc.setTextColor(255, 255, 255);
+      pdfDoc.setFont('helvetica', 'bold');
+      const pName = isFeedback ? (r.name || 'N/A') : (r.studentName || 'N/A');
+      pdfDoc.text(`Sr. No. ${i + 1}  —  ${pName}`, 10, 14);
+      pdfDoc.setFontSize(8);
+      pdfDoc.setFont('helvetica', 'normal');
+      pdfDoc.text(`Roll No: ${r.rollNumber || '-'}  |  ${r.branch || '-'}  |  ${r.year || '-'}`, ppw - 10, 14, { align: 'right' });
+
+      // Personal details table
+      autoTable(pdfDoc, {
+        startY: 28,
+        head: [['Field', 'Value', 'Field', 'Value']],
+        body: isFeedback
+          ? [
+              ['Name', r.name || '-', 'Roll Number', r.rollNumber || '-'],
+              ['Branch', r.branch || '-', 'Year', r.year || '-'],
+              ['College Name', r.collegeName || '-', 'Contact Number', r.contactNumber || '-'],
+              ['Industry Name', r.industryName || '-', 'Date of Visit', r.visitDate || '-'],
+              ['Industry Type', r.industryType || '-', 'Visit Duration', r.visitDuration || '-'],
+              ['Visit Useful?', r.visitUseful || '-', 'Would Recommend?', r.wouldRecommend || '-'],
+            ]
+          : [
+              ['Name', r.studentName || '-', 'Roll Number', r.rollNumber || '-'],
+              ['Branch', r.branch || '-', 'Year', r.year || '-'],
+              ['College Name', r.collegeName || '-', 'Contact Number', r.contactNumber || '-'],
+              ['Industry Visited', r.industryName || '-', '', ''],
+            ],
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: MAROON, textColor: 255, fontStyle: 'bold', fontSize: 8 },
+        columnStyles: {
+          0: { fontStyle: 'bold', fillColor: LABEL_BG, cellWidth: 38 },
+          1: { cellWidth: 55 },
+          2: { fontStyle: 'bold', fillColor: LABEL_BG, cellWidth: 38 },
+          3: { cellWidth: 55 },
+        },
+        alternateRowStyles: {},
+        margin: { left: 10, right: 10 },
+      });
+
+      const afterPersonal = (pdfDoc as any).lastAutoTable.finalY + 6;
+
+      if (isFeedback) {
+        // Ratings table
+        autoTable(pdfDoc, {
+          startY: afterPersonal,
+          head: [['Rating Category', 'Score']],
+          body: [
+            ['Overall Experience', r.overallExperience ? `${r.overallExperience} / 5` : '-'],
+            ['Lab Facilities & Infrastructure', r.facilitiesRating ? `${r.facilitiesRating} / 5` : '-'],
+            ['Staff Support & Mentorship', r.staffSupportRating ? `${r.staffSupportRating} / 5` : '-'],
+            ['Equipment & Tools Availability', r.equipmentRating ? `${r.equipmentRating} / 5` : '-'],
+            ['Learning Value & Innovation', r.learningValueRating ? `${r.learningValueRating} / 5` : '-'],
+          ],
+          styles: { fontSize: 8, cellPadding: 3 },
+          headStyles: { fillColor: MAROON, textColor: 255, fontStyle: 'bold' },
+          columnStyles: {
+            0: { fontStyle: 'bold', fillColor: LABEL_BG, cellWidth: 100 },
+            1: { fontStyle: 'bold', textColor: MAROON },
+          },
+          alternateRowStyles: {},
+          margin: { left: 10, right: 10 },
+        });
+
+        const afterRatings = (pdfDoc as any).lastAutoTable.finalY + 6;
+
+        // Open-text answers
+        autoTable(pdfDoc, {
+          startY: afterRatings,
+          head: [['Question / Field', 'Response']],
+          body: [
+            ['Objectives of the Visit', r.visitObjectives || '-'],
+            ['Understanding of Industrial Workflow', r.workflowUnderstanding || '-'],
+            ['Safety Measures Explained', r.safetyMeasures || '-'],
+            ['What did you enjoy most about the lab?', r.suggestions || '-'],
+            ['Suggestions for Improvement', r.additionalComments || '-'],
+          ],
+          styles: { fontSize: 8, cellPadding: 3 },
+          headStyles: { fillColor: MAROON, textColor: 255, fontStyle: 'bold' },
+          columnStyles: {
+            0: { fontStyle: 'bold', fillColor: LABEL_BG, cellWidth: 80 },
+            1: { cellWidth: 'auto' },
+          },
+          alternateRowStyles: {},
+          margin: { left: 10, right: 10 },
+        });
+      } else {
+        // Questionnaire — all questions & answers
+        autoTable(pdfDoc, {
+          startY: afterPersonal,
+          head: [['Q. No.', 'Question', 'Answer']],
+          body: [
+            ['Q1', 'What did you see in the industry?', r.whatDidYouSee || '-'],
+            ['Q2', 'Which 3D printing machines were shown?', r.machinesShown || '-'],
+            ['Q3', 'What materials are used for 3D printing?', r.materialsUsed || '-'],
+            ['Q4', 'What products are made using 3D printing there?', r.productsMade || '-'],
+            ['Q5', 'Did you understand the working of 3D printing?', r.understoodWorking || '-'],
+            ['Q6', 'What was the most interesting thing you learned?', r.mostInteresting || '-'],
+            ['Q7', 'What problems or difficulties did you observe?', r.problemsObserved || '-'],
+            ['Q8', 'Were safety rules explained properly?', r.safetyExplained || '-'],
+            ['Q9', 'Would you like to learn more about 3D printing?', r.wouldLearnMore || '-'],
+            ['Q10', 'What is your overall experience of the visit?', r.overallExperience || '-'],
+          ],
+          styles: { fontSize: 8, cellPadding: 3 },
+          headStyles: { fillColor: MAROON, textColor: 255, fontStyle: 'bold' },
+          columnStyles: {
+            0: { cellWidth: 12, fontStyle: 'bold', halign: 'center' },
+            1: { cellWidth: 75, fontStyle: 'bold', fillColor: LABEL_BG },
+            2: { cellWidth: 'auto' },
+          },
+          alternateRowStyles: {},
+          margin: { left: 10, right: 10 },
+        });
+      }
+
+      // Page footer
+      pdfDoc.setFontSize(7);
+      pdfDoc.setTextColor(150);
+      pdfDoc.setFont('helvetica', 'normal');
+      pdfDoc.text(
+        `Page ${i + 2} of ${totalPages}  |  Ravindra Sakharpe AICTE Idea Lab, Warananagar`,
+        ppw / 2, pph - 6, { align: 'center' }
+      );
+    });
+
+    pdfDoc.save(`${activeTab}_detailed_report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const NavItem = ({ id, label, icon: Icon }: { id: TabType, label: string, icon: any }) => (
