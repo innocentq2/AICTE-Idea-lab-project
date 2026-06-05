@@ -298,6 +298,7 @@ const Attendance = () => {
                     className="form-input" 
                     value={formData.timingIn}
                     onChange={(e) => setFormData({ ...formData, timingIn: e.target.value })}
+                    step="60"
                     required
                   />
                 </div>
@@ -310,6 +311,7 @@ const Attendance = () => {
                     className="form-input" 
                     value={formData.timingOut}
                     onChange={(e) => setFormData({ ...formData, timingOut: e.target.value })}
+                    step="60"
                     required
                   />
                 </div>
