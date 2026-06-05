@@ -649,10 +649,6 @@ const PrinterDetails = () => {
                   </p>
                   <button
                     onClick={() => {
-                      if (!user) {
-                        alert('Please log in to start a printer session.');
-                        return;
-                      }
                       setIsStartingSession(true);
                     }}
                     className="btn-primary"
