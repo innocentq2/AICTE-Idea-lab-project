@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Printer, MapPin, Activity, Camera, Upload, Link2, RotateCcw, X } from 'lucide-react';
+import { Printer, MapPin, Activity, Camera, Upload, Link2, RotateCcw, X, CheckCircle, Clock, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -237,6 +237,16 @@ const LabPortal = () => {
   const { user, isAdmin } = useAuth();
   const [printers, setPrinters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Available' | 'In Use'>('All');
+  const [timeTick, setTimeTick] = useState(Date.now());
+
+  // Real-time tick effect for active countdowns
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeTick(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Modal State for Editing Image
   const [editingPrinter, setEditingPrinter] = useState<any | null>(null);
@@ -338,6 +348,24 @@ const LabPortal = () => {
     }, { merge: true });
   };
 
+  const totalCount = printers.length || 18;
+  const availableCount = printers.filter(p => p.status === 'Available').length;
+  const inUseCount = printers.filter(p => p.status === 'In Use').length;
+
+  const getRemainingTimeStr = (sessionEndTimeStr: string) => {
+    const diff = new Date(sessionEndTimeStr).getTime() - timeTick;
+    if (diff <= 0) return 'Session ended';
+    const hrs = Math.floor(diff / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+    return `${hrs > 0 ? `${hrs}h ` : ''}${mins}m ${secs}s remaining`;
+  };
+
+  const filteredPrinters = printers.filter(p => {
+    if (statusFilter === 'All') return true;
+    return p.status === statusFilter;
+  });
+
   if (loading) {
     return (
       <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -392,7 +420,69 @@ const LabPortal = () => {
         )}
       </div>
 
-      <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginTop: '2.5rem', marginBottom: '1.5rem', color: 'var(--text-main)' }}>Access Printers</h2>
+      {/* Stats Summary Panel */}
+      <div className="stats-summary-grid">
+        <div className="stat-summary-card">
+          <div className="stat-summary-icon-wrapper" style={{ background: 'rgba(127, 29, 29, 0.08)', color: '#7F1D1D' }}>
+            <Printer size={20} />
+          </div>
+          <div className="stat-summary-details">
+            <span className="stat-summary-value">{totalCount}</span>
+            <span className="stat-summary-label">Total Printers</span>
+          </div>
+        </div>
+
+        <div className="stat-summary-card">
+          <div className="stat-summary-icon-wrapper" style={{ background: 'rgba(16, 185, 129, 0.08)', color: '#10B981' }}>
+            <CheckCircle size={20} />
+          </div>
+          <div className="stat-summary-details">
+            <span className="stat-summary-value">{availableCount}</span>
+            <span className="stat-summary-label">Available Now</span>
+          </div>
+        </div>
+
+        <div className="stat-summary-card">
+          <div className="stat-summary-icon-wrapper" style={{ background: 'rgba(249, 115, 22, 0.08)', color: '#F97316' }}>
+            <Activity size={20} />
+          </div>
+          <div className="stat-summary-details">
+            <span className="stat-summary-value">{inUseCount}</span>
+            <span className="stat-summary-label">Active Printing</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginTop: '2.5rem', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>Access Printers</h2>
+        
+        {/* Filter Chips */}
+        <div className="filter-chips-container" style={{ margin: 0 }}>
+          <button
+            onClick={() => setStatusFilter('All')}
+            className={`filter-chip ${statusFilter === 'All' ? 'active' : ''}`}
+          >
+            <span>All</span>
+            <span className="filter-chip-count">{totalCount}</span>
+          </button>
+          <button
+            onClick={() => setStatusFilter('Available')}
+            className={`filter-chip ${statusFilter === 'Available' ? 'active' : ''}`}
+          >
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
+            <span>Available</span>
+            <span className="filter-chip-count">{availableCount}</span>
+          </button>
+          <button
+            onClick={() => setStatusFilter('In Use')}
+            className={`filter-chip ${statusFilter === 'In Use' ? 'active' : ''}`}
+          >
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#F97316' }} />
+            <span>In Use</span>
+            <span className="filter-chip-count">{inUseCount}</span>
+          </button>
+        </div>
+      </div>
 
       <div style={{
         display: 'grid',
@@ -400,7 +490,7 @@ const LabPortal = () => {
         gap: '3rem',
         marginTop: '1.5rem'
       }}>
-        {printers.map((printer) => {
+        {filteredPrinters.map((printer) => {
           return (
             <div 
               key={printer.id} 
@@ -423,7 +513,7 @@ const LabPortal = () => {
               <div style={{
                 position: 'absolute',
                 inset: 0,
-                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.85) 100%), url(${printer.imageUrl || printerBg})`,
+                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.85) 100%), url(${printer.imageUrl || printerBg})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -540,11 +630,61 @@ const LabPortal = () => {
                       <span>{printer.location}</span>
                     </div>
                   </div>
+
+                  {/* Operator & Countdown Details */}
+                  {printer.status === 'In Use' && (
+                    <div style={{ 
+                      background: 'rgba(0, 0, 0, 0.45)', backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '12px',
+                      padding: '0.65rem 0.85rem', display: 'flex', flexDirection: 'column', gap: '0.35rem',
+                      color: 'white', fontSize: '0.82rem', marginTop: '0.25rem'
+                    }}
+                    onClick={(e) => {
+                      // Prevent navigating if clicking detailed text areas specifically
+                      e.stopPropagation();
+                      navigate(`/lab-portal/printer/${printer.id}`);
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}>
+                        <User size={13} color="#FCA5A5" />
+                        <span>Operator: {printer.currentOperator || 'Unknown Student'}</span>
+                      </div>
+                      {printer.sessionEndTime && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.8rem', color: '#FED7AA' }}>
+                          <Clock size={13} color="#F97316" />
+                          <span>{getRemainingTimeStr(printer.sessionEndTime)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </div>
               </div>
             </div>
           );
         })}
+
+        {/* Empty State */}
+        {filteredPrinters.length === 0 && (
+          <div style={{
+            textAlign: 'center', padding: '5rem 2rem', background: 'white', borderRadius: '24px',
+            border: '1px solid #E2E8F0', color: 'var(--text-muted)', display: 'flex',
+            flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: '2rem',
+            boxShadow: 'var(--shadow-sm)', gridColumn: '1 / -1'
+          }}>
+            <Printer size={48} color="var(--text-muted)" style={{ opacity: 0.4 }} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>No printers found</h3>
+            <p style={{ margin: 0, fontSize: '0.9rem', maxWidth: '320px', lineHeight: '1.5' }}>
+              There are currently no printers matching the status filter "{statusFilter}".
+            </p>
+            <button
+              onClick={() => setStatusFilter('All')}
+              className="btn-primary"
+              style={{ width: 'auto', padding: '0.55rem 1.25rem', fontSize: '0.85rem', marginTop: '0.5rem' }}
+            >
+              Show All
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Edit Image Modal */}
