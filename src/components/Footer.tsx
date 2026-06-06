@@ -101,9 +101,6 @@ const Footer = () => {
         <span>
           © AICTE IDEA Lab All rights reserved.
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(127, 29, 29, 0.05)', padding: '0.4rem 0.8rem', borderRadius: '20px' }}>
-          Powered by <strong style={{ color: '#7F1D1D', fontWeight: 800 }}>Yash</strong>
-        </span>
       </div>
     </footer>
   );
