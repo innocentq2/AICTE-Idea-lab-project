@@ -89,8 +89,10 @@ const Dashboard = () => {
             <div className="card-icon-wrapper">
               <Users size={52} strokeWidth={1.5} />
             </div>
-            <h2 className="dashboard-card-title">Student Ambassadors</h2>
-            <p className="dashboard-card-subtitle">Meet our lab representatives</p>
+            <div className="dashboard-card-text">
+              <h2 className="dashboard-card-title">Student Ambassadors</h2>
+              <p className="dashboard-card-subtitle">Meet our lab representatives</p>
+            </div>
           </div>
         </Link>
 
@@ -103,8 +105,10 @@ const Dashboard = () => {
             <div className="card-icon-wrapper">
               <Info size={52} strokeWidth={1.5} />
             </div>
-            <h2 className="dashboard-card-title">Lab Portal</h2>
-            <p className="dashboard-card-subtitle">About our innovation center</p>
+            <div className="dashboard-card-text">
+              <h2 className="dashboard-card-title">Lab Portal</h2>
+              <p className="dashboard-card-subtitle">About our innovation center</p>
+            </div>
           </div>
         </Link>
 
@@ -117,8 +121,10 @@ const Dashboard = () => {
             <div className="card-icon-wrapper">
               <QrCode size={52} strokeWidth={1.5} />
             </div>
-            <h2 className="dashboard-card-title">Attendance</h2>
-            <p className="dashboard-card-subtitle">Scan or enter your ID</p>
+            <div className="dashboard-card-text">
+              <h2 className="dashboard-card-title">Attendance</h2>
+              <p className="dashboard-card-subtitle">Scan or enter your ID</p>
+            </div>
           </div>
         </Link>
 
@@ -131,8 +137,10 @@ const Dashboard = () => {
             <div className="card-icon-wrapper">
               <MessageSquare size={52} strokeWidth={1.5} />
             </div>
-            <h2 className="dashboard-card-title">Feedback</h2>
-            <p className="dashboard-card-subtitle">Share your lab experience</p>
+            <div className="dashboard-card-text">
+              <h2 className="dashboard-card-title">Feedback</h2>
+              <p className="dashboard-card-subtitle">Share your lab experience</p>
+            </div>
           </div>
         </Link>
 
@@ -145,8 +153,10 @@ const Dashboard = () => {
             <div className="card-icon-wrapper">
               <FileQuestion size={52} strokeWidth={1.5} />
             </div>
-            <h2 className="dashboard-card-title">Questionnaire</h2>
-            <p className="dashboard-card-subtitle">Answer lab activity questions</p>
+            <div className="dashboard-card-text">
+              <h2 className="dashboard-card-title">Questionnaire</h2>
+              <p className="dashboard-card-subtitle">Answer lab activity questions</p>
+            </div>
           </div>
         </Link>
 
@@ -160,8 +170,10 @@ const Dashboard = () => {
               <div className="card-icon-wrapper">
                 <ClipboardList size={52} strokeWidth={1.5} />
               </div>
-              <h2 className="dashboard-card-title">Admin Dashboard</h2>
-              <p className="dashboard-card-subtitle">View and export attendance</p>
+              <div className="dashboard-card-text">
+                <h2 className="dashboard-card-title">Admin Dashboard</h2>
+                <p className="dashboard-card-subtitle">View and export attendance</p>
+              </div>
             </div>
           </Link>
         )}

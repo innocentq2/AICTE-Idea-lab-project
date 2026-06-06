@@ -996,7 +996,8 @@ a {
   }
 
   .dashboard-card {
-    height: 150px;
+    min-height: 150px;
+    height: auto;
     padding: 1.25rem 1rem;
     flex-direction: row;
     justify-content: flex-start;
@@ -1279,8 +1280,5 @@ a {
   .telemetry-panel {
     padding: 1rem;
     border-radius: 20px;
-  }
-  .dashboard-card {
-    height: 260px;
   }
 }
