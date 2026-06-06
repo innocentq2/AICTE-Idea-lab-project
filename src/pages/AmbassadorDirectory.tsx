@@ -1001,7 +1001,7 @@ const AmbassadorDirectory = () => {
                   <div style={{
                     position: 'absolute',
                     inset: 0,
-                    backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.85) 100%), url(${coordinator.imageUrl || ambassadorsBg})`,
+                    backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.85) 100%), url("${coordinator.imageUrl || ambassadorsBg}")`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1098,8 +1098,8 @@ const AmbassadorDirectory = () => {
                         <div
                           className="avatar-ring"
                           style={{
-                            width: '59px', height: '59x', borderRadius: '50%',
-                            background: coordinator.imageUrl ? `url(${coordinator.imageUrl})` : 'var(--gradient-maroon)',
+                            width: '59px', height: '59px', borderRadius: '50%',
+                            background: coordinator.imageUrl ? `url("${coordinator.imageUrl}")` : 'var(--gradient-maroon)',
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                             border: '2px solid white',

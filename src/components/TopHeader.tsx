@@ -62,15 +62,17 @@ const TopHeader = () => {
 
   return (
     <>
-      <header className="top-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+      <header className="top-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
           <Link to="/" className="header-logo-block">
-            <div className="header-logo-icon" style={{ background: 'transparent', boxShadow: 'none' }}>
+            <div className="header-logo-icon">
               <img src={aicteLogo} alt="Lab Logo" style={{ width: '95px', height: '90px', objectFit: 'contain' }} />
             </div>
-            AICTE Idea Lab
+            AICTE IDEA Lab
           </Link>
-          <div className="header-title-block">Innovation &amp; Incubation Center</div>
+          <div className="header-title-block">
+            Innovation &amp; Incubation Center
+          </div>
         </div>
 
         <div style={{ paddingRight: '1.5rem' }}>
