@@ -14,9 +14,15 @@ service cloud.firestore {
     // Allow public read access to directory and equipment details
     match /coordinators/{document} {
       allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /ambassdors/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
     match /ambassador_settings/{document} {
       allow read: if true;
+      allow write: if isAdmin();
     }
     match /printer_details/{document} {
       allow read: if true;

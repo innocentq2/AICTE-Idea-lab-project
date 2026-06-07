@@ -1,22 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Phone, BookOpen, Upload, Link2, RotateCcw, X, Edit2, Trash2, Plus } from 'lucide-react';
+import { Phone, BookOpen, Upload, Link2, X, Edit2, Trash2, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import ambassadorsBg from '../assets/ambassadors_bg.png';
-
-const AMBASSADORS = [
-  { id: 1, name: 'Atharva Anil Kolap', branch: 'Mechanical (S.Y.)', phone: '+91 9373875958' },
-  { id: 2, name: 'Patil Sahil Sunil', branch: 'Mechanical (S.Y.)', phone: '+91 7276802658' },
-  { id: 3, name: 'Mokashi Rupam Ramchandra', branch: 'Mechanical (T.Y.)', phone: '+91 7875236466' },
-  { id: 4, name: 'Patharvat Sachidanand Shivaji', branch: 'CSE (S.Y.)', phone: '+91 9607024685' },
-  { id: 5, name: 'Patil Swastik Sanjay', branch: 'Mechanical (T.Y.)', phone: '+91 7499204891' },
-  { id: 6, name: 'Kirti Bhagwan Lohar', branch: 'CSE (S.Y.)', phone: '+91 8530386641' },
-  { id: 7, name: 'Dashwant Dhruv Prithviraj', branch: 'Chemical (T.Y.)', phone: '+91 9022208107' },
-  { id: 8, name: 'Rajkiran Ravindra Shinde', branch: 'ENTC (T.Y.)', phone: '+91 9767975375' },
-  { id: 9, name: 'Radhika Sanjay Magar', branch: 'CSE (S.Y.)', phone: '+91 9359460315' },
-  { id: 10, name: 'Sonkade Prathamesh Baragali', branch: 'Mechanical (S.Y.)', phone: '+91 7776922261' }
-];
 
 const getInitials = (name: string) => {
   const parts = name.split(' ');
@@ -508,16 +495,17 @@ const AddCoordinatorModal = ({ onClose, onAdd }: AddCoordinatorModalProps) => {
 };
 
 interface EditAmbassadorModalProps {
-  ambassador: { id: number | string; name: string };
-  currentSettings: { bio?: string; imageUrl?: string };
+  ambassador: Person;
   onClose: () => void;
-  onSave: (bio: string, imageUrl: string) => Promise<void>;
-  onReset: () => Promise<void>;
+  onSave: (updatedData: Partial<Person>) => Promise<void>;
 }
 
-const EditAmbassadorModal = ({ ambassador, currentSettings, onClose, onSave, onReset }: EditAmbassadorModalProps) => {
-  const [bioInput, setBioInput] = useState<string>(currentSettings.bio || '');
-  const [imageUrlInput, setImageUrlInput] = useState<string>(currentSettings.imageUrl || '');
+const EditAmbassadorModal = ({ ambassador, onClose, onSave }: EditAmbassadorModalProps) => {
+  const [nameInput, setNameInput] = useState<string>(ambassador.name);
+  const [branchInput, setBranchInput] = useState<string>(ambassador.branch);
+  const [phoneInput, setPhoneInput] = useState<string>(ambassador.phone);
+  const [bioInput, setBioInput] = useState<string>(ambassador.bio || '');
+  const [imageUrlInput, setImageUrlInput] = useState<string>(ambassador.imageUrl || '');
   const [selectedFileName, setSelectedFileName] = useState<string>('');
   const [saving, setSaving] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -539,26 +527,23 @@ const EditAmbassadorModal = ({ ambassador, currentSettings, onClose, onSave, onR
   };
 
   const handleSave = async () => {
+    if (!nameInput || !branchInput || !phoneInput) {
+      alert("Name, Branch/Year, and Phone are required.");
+      return;
+    }
     setSaving(true);
     try {
-      await onSave(bioInput, imageUrlInput);
+      await onSave({
+        name: nameInput,
+        branch: branchInput,
+        phone: phoneInput,
+        bio: bioInput,
+        imageUrl: imageUrlInput
+      });
       onClose();
     } catch (err) {
       console.error('Error saving ambassador profile:', err);
       alert('Failed to save profile. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleReset = async () => {
-    setSaving(true);
-    try {
-      await onReset();
-      onClose();
-    } catch (err) {
-      console.error('Error resetting ambassador profile:', err);
-      alert('Failed to reset profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -590,14 +575,47 @@ const EditAmbassadorModal = ({ ambassador, currentSettings, onClose, onSave, onR
           </button>
         </div>
 
-        {/* Biography Input */}
+        {/* Inputs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <label style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>Name *</label>
+          <input
+            type="text"
+            className="form-input"
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            style={{ padding: '0.65rem 1rem', fontSize: '0.85rem', width: '100%', borderRadius: '12px' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <label style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>Branch / Year *</label>
+          <input
+            type="text"
+            className="form-input"
+            value={branchInput}
+            onChange={(e) => setBranchInput(e.target.value)}
+            style={{ padding: '0.65rem 1rem', fontSize: '0.85rem', width: '100%', borderRadius: '12px' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <label style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>Phone *</label>
+          <input
+            type="text"
+            className="form-input"
+            value={phoneInput}
+            onChange={(e) => setPhoneInput(e.target.value)}
+            style={{ padding: '0.65rem 1rem', fontSize: '0.85rem', width: '100%', borderRadius: '12px' }}
+          />
+        </div>
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem', margin: 0 }}>
             Biography / Bio
           </label>
           <textarea
             className="form-input"
-            placeholder="Introduce this team member..."
+            placeholder="Introduce this ambassador..."
             value={bioInput}
             onChange={(e) => setBioInput(e.target.value)}
             style={{
@@ -622,45 +640,18 @@ const EditAmbassadorModal = ({ ambassador, currentSettings, onClose, onSave, onR
                 width: '70px', height: '70px', borderRadius: '50%', background: 'var(--gradient-maroon)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.25rem', fontWeight: 700
               }}>
-                {getInitials(ambassador.name)}
+                {nameInput ? getInitials(nameInput) : '?'}
               </div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{ambassador.name}</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{nameInput || 'Name'}</span>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Preview profile photo</span>
             </div>
-
-            {/* Undo selection / Reset option */}
-            {(imageUrlInput !== (currentSettings.imageUrl || '') || bioInput !== (currentSettings.bio || '')) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setImageUrlInput(currentSettings.imageUrl || '');
-                  setBioInput(currentSettings.bio || '');
-                  setSelectedFileName('');
-                  if (fileInputRef.current) fileInputRef.current.value = '';
-                }}
-                style={{
-                  marginLeft: 'auto',
-                  background: 'rgba(0, 0, 0, 0.05)', color: 'var(--text-muted)',
-                  border: 'none', borderRadius: '50%', width: '28px', height: '28px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', transition: 'all 0.2s'
-                }}
-                title="Undo changes"
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                <RotateCcw size={14} />
-              </button>
-            )}
           </div>
         </div>
 
-        {/* Inputs Block */}
+        {/* Upload options */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-
-          {/* Option A: Local Upload */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Option 1: Upload Photo</span>
             <button
@@ -689,7 +680,6 @@ const EditAmbassadorModal = ({ ambassador, currentSettings, onClose, onSave, onR
             />
           </div>
 
-          {/* Option B: Image URL */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', margin: 0 }}>
               <Link2 size={14} /> Option 2: Image URL
@@ -699,7 +689,7 @@ const EditAmbassadorModal = ({ ambassador, currentSettings, onClose, onSave, onR
                 type="url"
                 className="form-input"
                 placeholder="https://example.com/avatar.jpg"
-                value={imageUrlInput.startsWith('data:') ? '' : imageUrlInput} // don't show base64 string in URL box
+                value={imageUrlInput.startsWith('data:') ? '' : imageUrlInput}
                 onChange={(e) => {
                   setImageUrlInput(e.target.value);
                   setSelectedFileName('');
@@ -710,25 +700,8 @@ const EditAmbassadorModal = ({ ambassador, currentSettings, onClose, onSave, onR
           </div>
         </div>
 
-        {/* Modal Actions */}
-        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-          {/* Reset Button (only if custom settings exist) */}
-          {(currentSettings.bio || currentSettings.imageUrl) && (
-            <button
-              onClick={handleReset}
-              disabled={saving}
-              style={{
-                padding: '0.65rem 1.25rem', borderRadius: '10px',
-                border: '1.5px solid #DC2626', background: 'none',
-                color: '#DC2626', fontWeight: 700, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem'
-              }}
-            >
-              <RotateCcw size={14} />
-              Reset to Default
-            </button>
-          )}
-
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
           <button
             type="button"
             onClick={onClose}
@@ -742,7 +715,6 @@ const EditAmbassadorModal = ({ ambassador, currentSettings, onClose, onSave, onR
           >
             Cancel
           </button>
-
           <button
             onClick={handleSave}
             disabled={saving}
@@ -761,16 +733,250 @@ const EditAmbassadorModal = ({ ambassador, currentSettings, onClose, onSave, onR
   );
 };
 
+interface AddAmbassadorModalProps {
+  onClose: () => void;
+  onAdd: (name: string, branch: string, phone: string, bio: string, imageUrl: string) => Promise<void>;
+}
+
+const AddAmbassadorModal = ({ onClose, onAdd }: AddAmbassadorModalProps) => {
+  const [nameInput, setNameInput] = useState<string>('');
+  const [branchInput, setBranchInput] = useState<string>('');
+  const [phoneInput, setPhoneInput] = useState<string>('');
+  const [bioInput, setBioInput] = useState<string>('');
+  const [imageUrlInput, setImageUrlInput] = useState<string>('');
+  const [selectedFileName, setSelectedFileName] = useState<string>('');
+  const [saving, setSaving] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 800 * 1024) {
+        alert("Image size is too large. Please select an image under 800KB.");
+        return;
+      }
+      setSelectedFileName(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrlInput(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAdd = async () => {
+    if (!nameInput || !branchInput || !phoneInput) {
+      alert("Name, Branch/Year, and Phone are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await onAdd(nameInput, branchInput, phoneInput, bioInput, imageUrlInput);
+      onClose();
+    } catch (err) {
+      console.error('Error adding ambassador profile:', err);
+      alert('Failed to add profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+      zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '1rem', backdropFilter: 'blur(6px)'
+    }}>
+      <div style={{
+        background: 'white', borderRadius: '24px', padding: '1.5rem 1.75rem',
+        width: '100%', maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto',
+        boxShadow: '0 25px 60px rgba(0,0,0,0.25)',
+        position: 'relative', display: 'flex', flexDirection: 'column', gap: '1.25rem',
+        border: '1px solid #E2E8F0'
+      }}>
+        {/* Modal Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+            Add New Student Ambassador
+          </h3>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Inputs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <label style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>Name *</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Full Name"
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            style={{ padding: '0.65rem 1rem', fontSize: '0.85rem', width: '100%', borderRadius: '12px' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <label style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>Branch / Year *</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="e.g. Mechanical (S.Y.)"
+            value={branchInput}
+            onChange={(e) => setBranchInput(e.target.value)}
+            style={{ padding: '0.65rem 1rem', fontSize: '0.85rem', width: '100%', borderRadius: '12px' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <label style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>Phone *</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="+91 XXXXXXXXXX"
+            value={phoneInput}
+            onChange={(e) => setPhoneInput(e.target.value)}
+            style={{ padding: '0.65rem 1rem', fontSize: '0.85rem', width: '100%', borderRadius: '12px' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          <label style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>Biography / Bio</label>
+          <textarea
+            className="form-input"
+            placeholder="Introduce this ambassador..."
+            value={bioInput}
+            onChange={(e) => setBioInput(e.target.value)}
+            style={{
+              padding: '0.65rem 1rem', fontSize: '0.85rem', width: '100%', borderRadius: '12px',
+              minHeight: '85px', resize: 'vertical', fontFamily: 'inherit'
+            }}
+          />
+        </div>
+
+        {/* Profile Image Preview */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>Profile Image Preview</span>
+          <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+            {imageUrlInput ? (
+              <img
+                src={imageUrlInput}
+                alt="Preview"
+                style={{ width: '70px', height: '70px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #E2E8F0' }}
+              />
+            ) : (
+              <div style={{
+                width: '70px', height: '70px', borderRadius: '50%', background: 'var(--gradient-maroon)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.25rem', fontWeight: 700
+              }}>
+                {nameInput ? getInitials(nameInput) : '?'}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{nameInput || 'Name'}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Preview profile photo</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Upload Options */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Option 1: Upload Photo</span>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                border: '2px dashed #CBD5E1', borderRadius: '12px', padding: '1rem',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: '0.4rem', background: '#F8FAFC', cursor: 'pointer', transition: 'all 0.2s',
+                color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 600, flex: 1, minHeight: '85px'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#7F1D1D')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '#CBD5E1')}
+            >
+              <Upload size={18} color="#7F1D1D" style={{ flexShrink: 0 }} />
+              <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '100%', fontSize: '0.75rem' }}>
+                {selectedFileName ? selectedFileName : 'Choose file (Max 800KB)'}
+              </span>
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', margin: 0 }}>
+              <Link2 size={14} /> Option 2: Image URL
+            </label>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+              <input
+                type="url"
+                className="form-input"
+                placeholder="https://example.com/avatar.jpg"
+                value={imageUrlInput.startsWith('data:') ? '' : imageUrlInput}
+                onChange={(e) => {
+                  setImageUrlInput(e.target.value);
+                  setSelectedFileName('');
+                }}
+                style={{ padding: '0.65rem 1rem', fontSize: '0.8rem', width: '100%', borderRadius: '12px' }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            style={{
+              padding: '0.65rem 1.25rem', borderRadius: '10px',
+              border: '1.5px solid #E2E8F0', background: 'none',
+              color: 'var(--text-muted)', fontWeight: 600, cursor: 'pointer',
+              fontSize: '0.85rem'
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAdd}
+            disabled={saving}
+            className="btn-primary"
+            style={{
+              width: 'auto', padding: '0.65rem 1.5rem',
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              fontSize: '0.85rem'
+            }}
+          >
+            {saving ? 'Adding...' : 'Add Ambassador'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AmbassadorDirectory = () => {
-  const { user, isAdmin } = useAuth();
-  const [ambassadorSettings, setAmbassadorSettings] = useState<Record<string, { bio?: string; imageUrl?: string }>>({});
+  const { isAdmin } = useAuth();
   const [coordinators, setCoordinators] = useState<Person[]>([]);
+  const [ambassadors, setAmbassadors] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modal State for Editing Profile
-  const [editingAmbassador, setEditingAmbassador] = useState<{ id: number | string; name: string } | null>(null);
+  const [editingAmbassador, setEditingAmbassador] = useState<Person | null>(null);
   const [editingCoordinator, setEditingCoordinator] = useState<Person | null>(null);
   const [isAddingCoordinator, setIsAddingCoordinator] = useState(false);
+  const [isAddingAmbassador, setIsAddingAmbassador] = useState(false);
 
   // Listen to coordinator custom profiles from Firestore
   useEffect(() => {
@@ -807,40 +1013,56 @@ const AmbassadorDirectory = () => {
     return () => unsubscribe();
   }, []);
 
-  // Listen to ambassador custom profile settings from Firestore
+  // Listen to ambassador custom profiles from Firestore
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'ambassador_settings'), (snapshot) => {
-      const settings: Record<string, { bio?: string; imageUrl?: string }> = {};
+    const unsubscribe = onSnapshot(collection(db, 'ambassdors'), (snapshot) => {
+      const list: Person[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        settings[doc.id] = {
+        list.push({
+          id: doc.id,
+          name: data.name || '',
+          branch: data.branch || '',
+          phone: data.phone || '',
           bio: data.bio || '',
           imageUrl: data.imageUrl || ''
-        };
+        });
       });
-      setAmbassadorSettings(settings);
+      setAmbassadors(list);
       setLoading(false);
     }, (error) => {
-      console.error('Error fetching ambassador settings:', error);
+      console.error('Error fetching ambassadors:', error);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const handleSaveSettings = async (bio: string, imageUrl: string) => {
+  const handleSaveAmbassador = async (updatedData: Partial<Person>) => {
     if (!editingAmbassador) return;
-    await setDoc(doc(db, 'ambassador_settings', String(editingAmbassador.id)), {
+    await setDoc(doc(db, 'ambassdors', editingAmbassador.id), {
+      ...updatedData,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  };
+
+  const handleAddAmbassador = async (name: string, branch: string, phone: string, bio: string, imageUrl: string) => {
+    const newDocRef = doc(collection(db, 'ambassdors'));
+    await setDoc(newDocRef, {
+      name,
+      branch,
+      phone,
       bio,
       imageUrl,
-      updatedBy: user?.email || 'Admin',
-      updatedAt: serverTimestamp()
+      createdAt: serverTimestamp()
     });
   };
 
-  const handleResetSettings = async () => {
-    if (!editingAmbassador) return;
-    await deleteDoc(doc(db, 'ambassador_settings', String(editingAmbassador.id)));
+  const handleDeleteAmbassador = async (id: string, name: string) => {
+    const confirmation = window.confirm(`Are you sure you want to delete ambassador "${name}"?`);
+    if (confirmation) {
+      await deleteDoc(doc(db, 'ambassdors', id));
+    }
   };
 
   const handleSaveCoordinator = async (updatedData: Partial<Person>) => {
@@ -871,8 +1093,7 @@ const AmbassadorDirectory = () => {
   };
 
   const filteredCoordinators = coordinators;
-
-  const filteredAmbassadors = AMBASSADORS;
+  const filteredAmbassadors = ambassadors;
 
 
   if (loading) {
@@ -1206,8 +1427,6 @@ const AmbassadorDirectory = () => {
             marginTop: '2.5rem'
           }}>
             {filteredAmbassadors.map((ambassador) => {
-              const settings = ambassadorSettings[String(ambassador.id)] || {};
-
               return (
                 <div key={ambassador.id} className="ambassador-card" style={{
                   display: 'flex',
@@ -1221,7 +1440,7 @@ const AmbassadorDirectory = () => {
                   <div style={{
                     position: 'absolute',
                     inset: 0,
-                    backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.85) 100%), url(${settings.imageUrl || ambassadorsBg})`,
+                    backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.85) 100%), url(${ambassador.imageUrl || ambassadorsBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1240,32 +1459,57 @@ const AmbassadorDirectory = () => {
                     justifyContent: 'space-between',
                     padding: '1.5rem'
                   }}>
-                    {/* Top Row: Admin Edit button */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                    {/* Top Row: Admin Edit & Delete buttons */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', gap: '6px' }}>
                       {isAdmin && (
-                        <button
-                          onClick={() => setEditingAmbassador(ambassador)}
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.95)',
-                            color: '#7F1D1D',
-                            border: '1.5px solid #F1F5F9',
-                            borderRadius: '50%',
-                            width: '36px',
-                            height: '36px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                            transition: 'all 0.2s',
-                            zIndex: 3
-                          }}
-                          title="Edit Profile"
-                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                        >
-                          <Edit2 size={16} />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => setEditingAmbassador(ambassador)}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.95)',
+                              color: '#7F1D1D',
+                              border: '1.5px solid #F1F5F9',
+                              borderRadius: '50%',
+                              width: '36px',
+                              height: '36px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                              transition: 'all 0.2s',
+                              zIndex: 3
+                            }}
+                            title="Edit Profile"
+                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAmbassador(ambassador.id, ambassador.name)}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.95)',
+                              color: '#DC2626',
+                              border: '1.5px solid #F1F5F9',
+                              borderRadius: '50%',
+                              width: '36px',
+                              height: '36px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                              transition: 'all 0.2s',
+                              zIndex: 3
+                            }}
+                            title="Delete Ambassador"
+                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
                       )}
                     </div>
 
@@ -1277,7 +1521,7 @@ const AmbassadorDirectory = () => {
                           className="avatar-ring"
                           style={{
                             width: '48px', height: '48px', borderRadius: '50%',
-                            background: settings.imageUrl ? `url(${settings.imageUrl})` : 'var(--gradient-maroon)',
+                            background: ambassador.imageUrl ? `url(${ambassador.imageUrl})` : 'var(--gradient-maroon)',
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                             border: '2px solid white',
@@ -1286,7 +1530,7 @@ const AmbassadorDirectory = () => {
                             fontWeight: 700, fontSize: '0.95rem', flexShrink: 0
                           }}
                         >
-                          {!settings.imageUrl && getInitials(ambassador.name)}
+                          {!ambassador.imageUrl && getInitials(ambassador.name)}
                         </div>
 
                         <h3 style={{
@@ -1302,7 +1546,7 @@ const AmbassadorDirectory = () => {
                       </div>
 
                       {/* Biography display */}
-                      {settings.bio && (
+                      {ambassador.bio && (
                         <p style={{
                           fontSize: '0.82rem',
                           color: 'rgba(255, 255, 255, 0.95)',
@@ -1315,9 +1559,9 @@ const AmbassadorDirectory = () => {
                           WebkitBoxOrient: 'vertical',
                           overflow: 'hidden'
                         }}
-                          title={settings.bio}
+                          title={ambassador.bio}
                         >
-                          "{settings.bio}"
+                          "{ambassador.bio}"
                         </p>
                       )}
 
@@ -1347,6 +1591,27 @@ const AmbassadorDirectory = () => {
                 </div>
               );
             })}
+
+            {/* Add Ambassador Button Card (Admins Only) */}
+            {isAdmin && (
+              <div
+                onClick={() => setIsAddingAmbassador(true)}
+                className="dashed-add-card"
+                style={{
+                  height: '340px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  gap: '0.5rem',
+                  borderRadius: '24px'
+                }}
+              >
+                <Plus size={40} className="add-icon" color="#7F1D1D" />
+                <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.95rem' }}>Add Ambassador</span>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1355,10 +1620,8 @@ const AmbassadorDirectory = () => {
       {editingAmbassador && (
         <EditAmbassadorModal
           ambassador={editingAmbassador}
-          currentSettings={ambassadorSettings[String(editingAmbassador.id)] || {}}
           onClose={() => setEditingAmbassador(null)}
-          onSave={handleSaveSettings}
-          onReset={handleResetSettings}
+          onSave={handleSaveAmbassador}
         />
       )}
 
@@ -1376,6 +1639,14 @@ const AmbassadorDirectory = () => {
         <AddCoordinatorModal
           onClose={() => setIsAddingCoordinator(false)}
           onAdd={handleAddCoordinator}
+        />
+      )}
+
+      {/* Add Ambassador Modal */}
+      {isAddingAmbassador && (
+        <AddAmbassadorModal
+          onClose={() => setIsAddingAmbassador(false)}
+          onAdd={handleAddAmbassador}
         />
       )}
     </div>
