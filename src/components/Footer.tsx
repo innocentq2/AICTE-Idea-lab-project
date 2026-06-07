@@ -99,7 +99,7 @@ const Footer = () => {
         fontWeight: 600
       }}>
         <span>
-          © AICTE IDEA Lab All rights reserved.
+          © 2026 - Till Now || AICTE IDEA Lab || All rights reserved.
         </span>
       </div>
     </footer>
