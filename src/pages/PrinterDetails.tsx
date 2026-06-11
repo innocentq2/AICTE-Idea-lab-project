@@ -268,7 +268,7 @@ const PrinterDetails = () => {
   const handleStartSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!printerId || !printer) return;
-    if (!formName || !formEmail || !formReason || !formObjectName || !formConsumption) {
+    if (!formName || !formEmail || !formRollNo || !formMobile || !formReason || !formObjectName || !formConsumption) {
       alert('Please fill out all required fields.');
       return;
     }
@@ -842,24 +842,26 @@ const PrinterDetails = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Roll Number</label>
+                  <label className="form-label">Roll Number *</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Optional"
+                    placeholder="Enter your roll number"
                     value={formRollNo}
                     onChange={(e) => setFormRollNo(e.target.value)}
+                    required
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Mobile Number</label>
+                  <label className="form-label">Mobile Number *</label>
                   <input
                     type="tel"
                     className="form-input"
-                    placeholder="Optional"
+                    placeholder="Enter mobile number"
                     value={formMobile}
                     onChange={(e) => setFormMobile(e.target.value)}
+                    required
                   />
                 </div>
               </div>
