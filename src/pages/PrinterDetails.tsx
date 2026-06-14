@@ -4,6 +4,7 @@ import { ArrowLeft, Printer, Activity, User, Clock, FileText, CheckCircle, Alert
 import { db } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import printerBg from '../assets/printer_bg.png';
+import printingGif from '../assets/printing.gif';
 import { useAuth } from '../contexts/AuthContext';
 
 interface PrinterData {
@@ -525,7 +526,7 @@ const PrinterDetails = () => {
             {/* Cover Banner */}
             <div style={{
               height: '180px',
-              backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%), url(${printer.imageUrl || printerBg})`,
+              backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%), url(${printer.status === 'In Use' ? printingGif : (printer.imageUrl || printerBg)})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               display: 'flex',

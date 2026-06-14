@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import printerBg from '../assets/printer_bg.png';
+import printingGif from '../assets/printing.gif';
 
 interface EditBannerModalProps {
   printer: { id: number; name: string };
@@ -513,7 +514,7 @@ const LabPortal = () => {
               <div style={{
                 position: 'absolute',
                 inset: 0,
-                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.85) 100%), url(${printer.imageUrl || printerBg})`,
+                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.85) 100%), url(${printer.status === 'In Use' ? printingGif : (printer.imageUrl || printerBg)})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
